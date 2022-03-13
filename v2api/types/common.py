@@ -1,0 +1,6 @@
+class Inbound(object):
+    message = ...
+
+
+class Account(object):
+    message = ...
