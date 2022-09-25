@@ -1,3 +1,4 @@
+import re
 import json
 import atexit
 import socket
@@ -55,8 +56,17 @@ class V2rayCore(object):
         if self._process:
             raise RuntimeError('V2ray is already started')
 
+        v = re.findall(r'V2Ray (\d+)', subprocess.check_output(['v2ray', 'version']).decode('utf-8'))
+        if not v:
+            raise RuntimeError('V2ray missing')
+
+        if int(v[0]) >= 5:
+            cmd = [self._bin_path, 'run']
+        else:
+            [self._bin_path, '-config', 'stdin:']
+
         self._process = subprocess.Popen(
-            [self._bin_path, '-config', 'stdin:'],
+            cmd,
             env={"V2RAY_LOCATION_ASSET": V2RAY_LOCATION_ASSET},
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE
@@ -92,6 +102,9 @@ def v2ray_is_running():
 
 def generate_db_config():
     conf = V2rayConfig({
+        "log": {
+            "logLevel": "debug"
+        },
         "api": {},
         "stats": {},
         "inbounds": [],
