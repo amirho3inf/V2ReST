@@ -10,7 +10,7 @@ def _get_user_plan_keys(username: str) -> list:
     :param username:
     :return: List of redis keys
     """
-    plan_keys = list(redis.scan_iter(f'vmess:user:{username}:*'))
+    plan_keys = list(redis.scan_iter(f'v2rest:user:{username}:*'))
     return plan_keys
 
 
@@ -24,7 +24,7 @@ def add_user(username: str, id: Union[str, UUID]) -> bool:
     """
     if user_exists(username):
         return False
-    redis.hset("vmess:users", username, str(id))
+    redis.hset("v2rest:users", username, str(id))
     return True
 
 
@@ -38,7 +38,7 @@ def modify_user(username: str, id: Union[str, UUID]) -> bool:
     """
     if not user_exists(username):
         return False
-    redis.hset("vmess:users", username, str(id))
+    redis.hset("v2rest:users", username, str(id))
     return True
 
 
@@ -51,7 +51,7 @@ def remove_user(username: str) -> bool:
     """
     if not user_exists(username):
         return False
-    redis.hdel("vmess:users", username)
+    redis.hdel("v2rest:users", username)
     # remove user activate plans
     for k in _get_user_plan_keys(username):
         redis.delete(k)
@@ -66,7 +66,7 @@ def get_user(username: str) -> Union[dict, None]:
     :return:
     :rtype: Union[dict, None]
     """
-    if not (id := redis.hget("vmess:users", username)):
+    if not (id := redis.hget("v2rest:users", username)):
         return
 
     plans = []
@@ -104,7 +104,7 @@ def user_exists(username: str) -> bool:
     :param username:
     :return:
     """
-    return bool(redis.hget("vmess:users", username))
+    return bool(redis.hget("v2rest:users", username))
 
 
 def get_users(only_active_users=False) -> Iterator[dict]:
@@ -116,7 +116,7 @@ def get_users(only_active_users=False) -> Iterator[dict]:
     :return: All users username and id
     :rtype: Iterator[dict]
     """
-    for username, id in redis.hgetall("vmess:users").items():
+    for username, id in redis.hgetall("v2rest:users").items():
         if not only_active_users or user_has_active_plan(username):
             yield {
                 "username": username,
@@ -157,12 +157,12 @@ def add_plan(username: str, data: int, ttl: int) -> bool:
     :param ttl: Time to live in seconds
     :return: False if user doesn't exist else True
     """
-    if not redis.hget("vmess:users", username):
+    if not redis.hget("v2rest:users", username):
         return False
 
     if k := _get_user_plan_keys(username):
         plan_n = int(k[-1].split(":")[-1]) + 1
     else:
         plan_n = 0
-    redis.setex(f"vmess:user:{username}:{plan_n}", value=data, time=ttl)
+    redis.setex(f"v2rest:user:{username}:{plan_n}", value=data, time=ttl)
     return True

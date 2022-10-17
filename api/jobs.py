@@ -18,7 +18,7 @@ def _deactive_user(username: str) -> None:
 
     :param username:
     """
-    if redis.get(f"deactivate_try:{username}"):
+    if redis.get(f"v2rest:deactivate_try:{username}"):
         return
     try:
         v2ray.client.remove_user(email=username, inbound_tag="VMESS_INBOUND")
@@ -26,7 +26,7 @@ def _deactive_user(username: str) -> None:
         pass
     except Exception:
         traceback.print_exc()
-    redis.setex(f"deactivate_try:{username}", time=60, value=1)
+    redis.setex(f"v2rest:deactivate_try:{username}", time=60, value=1)
 
 
 def record_users_usage():
