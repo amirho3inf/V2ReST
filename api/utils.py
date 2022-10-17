@@ -1,11 +1,14 @@
 import base64
 import json
 import io
+import re
 import qrcode
 from config import (
     V2RAY_ADDRESS,
     V2RAY_PORT
 )
+
+USERNAME_REGEXP = re.compile(r'^(?=\w{3,32}\b)[a-zA-Z0-9]+(?:_[a-zA-Z0-9]+)*$')
 
 
 def share_vmess(user_id: str, username: str) -> tuple:
@@ -33,3 +36,7 @@ def share_vmess(user_id: str, username: str) -> tuple:
         qr = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     return (link, qr)
+
+
+def validate_username(username: str) -> bool:
+    return bool(USERNAME_REGEXP.match(username))

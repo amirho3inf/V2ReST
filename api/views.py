@@ -6,7 +6,7 @@ from v2api.types.vmess import VMessAccount
 from v2api import errors as v2errors
 from . import app, database as db
 from .v2ray import client as v2client
-from .utils import share_vmess
+from .utils import share_vmess, validate_username
 
 
 class User(BaseModel):
@@ -38,10 +38,10 @@ def add_user(user: User):
     - **id** must be an UUID. if not specified, a random UUID will be generated for user.
     """
 
-    # TODO
-    # if not user.username.isalpha():
-    #     raise HTTPException(status_code=400,
-    #                         detail="Username can only contain alpha characters")
+    if not validate_username(user.username):
+        raise HTTPException(
+            status_code=400,
+            detail="Username only can be 3 to 12 characters and contain a-z, 0-9, and underscores in between.")
 
     added = db.add_user(user.username, user.id)
     if not added:
