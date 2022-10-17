@@ -9,6 +9,7 @@ grpcio==1.44.0
 h11==0.13.0
 idna==3.3
 packaging==21.3
+Pillow==9.2.0
 protobuf==3.19.4
 pydantic==1.9.0
 pyparsing==3.0.7
@@ -16,6 +17,7 @@ python-decouple==3.6
 python-dotenv==0.21.0
 pytz==2021.3
 pytz-deprecation-shim==0.1.0.post0
+qrcode==7.3.1
 redis==4.1.4
 six==1.16.0
 sniffio==1.2.0

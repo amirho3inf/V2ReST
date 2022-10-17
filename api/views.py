@@ -1,3 +1,4 @@
+
 from fastapi import Body, HTTPException
 from pydantic import BaseModel, Field
 from uuid import UUID, uuid4
@@ -5,16 +6,19 @@ from v2api.types.vmess import VMessAccount
 from v2api import errors as v2errors
 from . import app, database as db
 from .v2ray import client as v2client
+from .utils import share_vmess
 
 
-class User:
-    class new(BaseModel):
-        id: UUID = Field(default_factory=uuid4)
-        username: str
+class User(BaseModel):
+    username: str
+    id: UUID = Field(default_factory=uuid4)
 
-    class modify(BaseModel):
-        username: str  # unchangeable
-        id: UUID
+
+class UserResponse(BaseModel):
+    username: str
+    id: UUID
+    link: str
+    qr: str
 
 
 class Plan(BaseModel):
@@ -22,19 +26,20 @@ class Plan(BaseModel):
     ttl: int
 
 
-@app.get("/user/{username}", tags=['User'])
+@app.get("/user/{username}", tags=['User'], response_model=UserResponse)
 def get_user(username: str):
     """
     Get users information and active plans
     """
     if user := db.get_user(username):
-        return user
+        link, qr = share_vmess(user['id'], user['username'])
+        return UserResponse(id=user['id'], username=user['username'], link=link, qr=qr)
 
     raise HTTPException(status_code=404, detail="User not found")
 
 
-@app.post("/user", tags=['User'])
-def add_user(user: User.new):
+@app.post("/user", tags=['User'], response_model=UserResponse)
+def add_user(user: User):
     """
     Add a new user
 
@@ -50,11 +55,12 @@ def add_user(user: User.new):
     if not added:
         raise HTTPException(status_code=409, detail="User already exists.")
 
-    return user
+    link, qr = share_vmess(user.id, user.username)
+    return UserResponse(id=user.id, username=user.username, link=link, qr=qr)
 
 
-@app.put("/user", tags=['User'])
-def modify_user(user: User.modify):
+@app.put("/user", tags=['User'], response_model=UserResponse)
+def modify_user(user: User):
     """
     Modify users information
 
@@ -72,7 +78,8 @@ def modify_user(user: User.modify):
     except v2errors.EmailNotFoundError:
         pass
 
-    return user
+    link, qr = share_vmess(user.id, user.username)
+    return UserResponse(id=user.id, username=user.username, link=link, qr=qr)
 
 
 @app.delete("/user", tags=['User'])

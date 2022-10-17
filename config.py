@@ -10,6 +10,7 @@ load_dotenv()  # take environment variables from .env.
 REDIS_URL = config('REDIS_URL', default='redis://localhost/0')
 
 # V2ray server settings
+V2RAY_ADDRESS = config('V2RAY_ADDRESS', default='example.com')
 V2RAY_HOST = config('V2RAY_HOST', default='0.0.0.0')
 V2RAY_PORT = config('V2RAY_PORT', default=443, cast=int)
 V2RAY_LOCATION_BIN = config('V2RAY_LOCATION_BIN', default='/usr/bin/v2ray')

@@ -38,4 +38,4 @@ Documentation will be available on http://127.0.0.1:8000/docs (this is default, 
 - [ ] Username validation
 - [ ] Authentication
 - [ ] Dockerize
-- [ ] Connect link and QR
+- [X] Connect link and QR
