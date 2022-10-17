@@ -1,5 +1,7 @@
 from decouple import config
+from dotenv import load_dotenv
 
+load_dotenv()  # take environment variables from .env.
 
 # Redis server settings
 # Redis is used as the main database, make sure redis auto save is enabled
@@ -9,11 +11,11 @@ REDIS_URL = config('REDIS_URL', default='redis://localhost/0')
 
 # V2ray server settings
 V2RAY_HOST = config('V2RAY_HOST', default='0.0.0.0')
-V2RAY_PORT = config('V2RAY_PORT', default=10086, cast=int)
+V2RAY_PORT = config('V2RAY_PORT', default=443, cast=int)
 V2RAY_LOCATION_BIN = config('V2RAY_LOCATION_BIN', default='/usr/bin/v2ray')
 V2RAY_LOCATION_ASSET = config('V2RAY_LOCATION_ASSET', default='/usr/share/v2ray')
 V2RAY_API_HOST = config('V2RAY_API_HOST', default='127.0.0.1')
-V2RAY_API_PORT = config('V2RAY_API_PORT', default=12121, cast=int)
+V2RAY_API_PORT = config('V2RAY_API_PORT', default=8080, cast=int)
 
 # Jobs settings
 # Set SYNC_USER_USAGE_PERIOD_SEC in seconds

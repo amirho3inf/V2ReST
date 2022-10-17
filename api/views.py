@@ -29,6 +29,7 @@ def get_user(username: str):
     """
     if user := db.get_user(username):
         return user
+
     raise HTTPException(status_code=404, detail="User not found")
 
 
@@ -64,7 +65,7 @@ def modify_user(user: User.modify):
         raise HTTPException(status_code=404, detail="User not found")
 
     try:
-        v2client.remove_user(email=user.username)
+        v2client.remove_user(email=user.username, inbound_tag="VMESS_INBOUND")
         v2client.add_user(email=user.username,
                           inbound_tag='VMESS_INBOUND',
                           account=VMessAccount(user.id))
@@ -83,7 +84,7 @@ def remove_user(username: str = Body(..., embed=True)):
     if not removed:
         raise HTTPException(status_code=404, detail="User not found")
     try:
-        v2client.remove_user(email=username)
+        v2client.remove_user(email=username, inbound_tag="VMESS_INBOUND")
     except v2errors.EmailNotFoundError:
         pass
     return {}
@@ -104,7 +105,7 @@ def add_plan(plan: Plan, username: str = Body(..., embed=True)):
     """
     Add a new plan for the user
 
-    - **data**: must be in bytes, e.g. 1000000B = 1MB
+    - **data**: must be in bytes, e.g. 1073741824B = 1GB
     - **ttl**: time to live, must be in seconds
     """
     ok = db.add_plan(username, plan.data, plan.ttl)

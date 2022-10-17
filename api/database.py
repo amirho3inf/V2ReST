@@ -3,10 +3,6 @@ from typing import Union, Iterator
 from uuid import UUID
 
 
-global _REDIS_CURSOR
-_REDIS_CURSOR = 0
-
-
 def _get_user_plan_keys(username: str) -> list:
     """
     Get the redis key of user active plans
@@ -14,10 +10,7 @@ def _get_user_plan_keys(username: str) -> list:
     :param username:
     :return: List of redis keys
     """
-    global _REDIS_CURSOR
-    _REDIS_CURSOR, plan_keys = redis.scan(
-        cursor=_REDIS_CURSOR,
-        match=f'vmess:user:{username}:*')
+    plan_keys = list(redis.scan_iter(f'vmess:user:{username}:*'))
     return plan_keys
 
 

@@ -56,14 +56,7 @@ class V2rayCore(object):
         if self._process:
             raise RuntimeError('V2ray is already started')
 
-        v = re.findall(r'V2Ray (\d+)', subprocess.check_output(['v2ray', 'version']).decode('utf-8'))
-        if not v:
-            raise RuntimeError('V2ray missing')
-
-        if int(v[0]) >= 5:
-            cmd = [self._bin_path, 'run']
-        else:
-            [self._bin_path, '-config', 'stdin:']
+        cmd = [self._bin_path, '-config', 'stdin:']
 
         self._process = subprocess.Popen(
             cmd,
@@ -123,8 +116,8 @@ def generate_db_config():
     # Add API
     conf['api']['services'] = [
         "HandlerService",
-        "LoggerService",
-        "StatsService"
+        "StatsService",
+        "LoggerService"
     ]
     conf['api']['tag'] = "API"
     # Add API inbound
@@ -197,10 +190,6 @@ def generate_db_config():
     # Add default (0) user level
     conf['policy']['levels'] = conf['policy'].get('levels') or {}
     conf['policy']['levels']['0'] = {
-        "connIdle": 300,
-        "downlinkOnly": 1,
-        "handshake": 4,
-        "uplinkOnly": 1,
         "statsUserUplink": True,
         "statsUserDownlink": True
     }
@@ -216,12 +205,16 @@ def generate_db_config():
                     {
                         "id": user['id'],
                         "email": user['username'],
-                        "alterId": 0,
                         "level": 0
                     }
                     for user in db.get_users(only_active_users=True)
-                ],
-                "disableInsecureEncryption": False
+                ]
+            },
+            "streamSettings": {
+                "network": "ws",
+                "wsSettings": {
+                    "path": "/"
+                }
             },
             "tag": "VMESS_INBOUND"
         }
@@ -243,7 +236,12 @@ def generate_db_config():
 
 if not v2ray_is_running():
     process = V2rayCore(V2RAY_LOCATION_BIN, V2RAY_LOCATION_ASSET)
-    process.start(generate_db_config())
+    config = generate_db_config()
+
+    with open("generated_config.json", "w") as file:
+        file.write(json.dumps(config, indent=4))
+
+    process.start(config)
 
     if not v2ray_is_running():
         raise RuntimeError("V2ray doesn't start")

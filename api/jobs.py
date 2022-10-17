@@ -1,6 +1,7 @@
 # interval and scheduled jobs
 
 from . import v2ray, scheduler, redis, database as db
+from v2api import errors as v2errors
 import traceback
 import config
 
@@ -20,8 +21,8 @@ def _deactive_user(username: str) -> None:
     if redis.get(f"deactivate_try:{username}"):
         return
     try:
-        v2ray.client.remove_user(email=username)
-    except v2ray.errors.EmailNotFoundError:
+        v2ray.client.remove_user(email=username, inbound_tag="VMESS_INBOUND")
+    except v2errors.EmailNotFoundError:
         pass
     except Exception:
         traceback.print_exc()
