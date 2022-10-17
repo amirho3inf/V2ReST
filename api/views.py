@@ -14,6 +14,10 @@ class User(BaseModel):
     id: UUID = Field(default_factory=uuid4)
 
 
+class UserModify(BaseModel):
+    id: UUID = Field(default_factory=uuid4)
+
+
 class UserResponse(BaseModel):
     username: str
     id: UUID
@@ -24,18 +28,6 @@ class UserResponse(BaseModel):
 class Plan(BaseModel):
     data: int
     ttl: int
-
-
-@app.get("/user/{username}", tags=['User'], response_model=UserResponse)
-def get_user(username: str):
-    """
-    Get users information and active plans
-    """
-    if user := db.get_user(username):
-        link, qr = share_vmess(user['id'], user['username'])
-        return UserResponse(id=user['id'], username=user['username'], link=link, qr=qr)
-
-    raise HTTPException(status_code=404, detail="User not found")
 
 
 @app.post("/user", tags=['User'], response_model=UserResponse)
@@ -59,31 +51,41 @@ def add_user(user: User):
     return UserResponse(id=user.id, username=user.username, link=link, qr=qr)
 
 
-@app.put("/user", tags=['User'], response_model=UserResponse)
-def modify_user(user: User):
+@app.get("/user/{username}", tags=['User'], response_model=UserResponse)
+def get_user(username: str):
     """
-    Modify users information
+    Get users information and active plans
+    """
+    if user := db.get_user(username):
+        link, qr = share_vmess(user['id'], user['username'])
+        return UserResponse(id=user['id'], username=user['username'], link=link, qr=qr)
 
-    - **username** is unchangeable
+    raise HTTPException(status_code=404, detail="User not found")
+
+
+@app.put("/user/{username}", tags=['User'], response_model=UserResponse)
+def modify_user(username: str, modify: UserModify):
     """
-    modified = db.modify_user(user.username, user.id)
+    Change user id
+    """
+    modified = db.modify_user(username, modify.id)
     if not modified:
         raise HTTPException(status_code=404, detail="User not found")
 
     try:
-        v2client.remove_user(email=user.username, inbound_tag="VMESS_INBOUND")
-        v2client.add_user(email=user.username,
+        v2client.remove_user(email=username, inbound_tag="VMESS_INBOUND")
+        v2client.add_user(email=username,
                           inbound_tag='VMESS_INBOUND',
-                          account=VMessAccount(user.id))
+                          account=VMessAccount(modify.id))
     except v2errors.EmailNotFoundError:
         pass
 
-    link, qr = share_vmess(user.id, user.username)
-    return UserResponse(id=user.id, username=user.username, link=link, qr=qr)
+    link, qr = share_vmess(modify.id, username)
+    return UserResponse(id=modify.id, username=username, link=link, qr=qr)
 
 
-@app.delete("/user", tags=['User'])
-def remove_user(username: str = Body(..., embed=True)):
+@app.delete("/user/{username}", tags=['User'])
+def remove_user(username: str):
     """
     Remove a user
     """
