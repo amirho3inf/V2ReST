@@ -149,3 +149,5 @@ cython_debug/
 #.idea/
 
 generated_config.json
+v2ray-core
+xray-core
