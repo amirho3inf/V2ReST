@@ -21,6 +21,7 @@ class UserModify(BaseModel):
 class UserResponse(BaseModel):
     username: str
     id: UUID
+    plans: list
     link: str
     qr: str
 
@@ -48,7 +49,7 @@ def add_user(user: User):
         raise HTTPException(status_code=409, detail="User already exists.")
 
     link, qr = share_vmess(user.id, user.username)
-    return UserResponse(id=user.id, username=user.username, link=link, qr=qr)
+    return UserResponse(id=user.id, username=user.username, plans=[], link=link, qr=qr)
 
 
 @app.get("/user/{username}", tags=['User'], response_model=UserResponse)
@@ -58,7 +59,7 @@ def get_user(username: str):
     """
     if user := db.get_user(username):
         link, qr = share_vmess(user['id'], user['username'])
-        return UserResponse(id=user['id'], username=user['username'], link=link, qr=qr)
+        return UserResponse(id=user['id'], username=user['username'], plans=user['plans'], link=link, qr=qr)
 
     raise HTTPException(status_code=404, detail="User not found")
 
@@ -80,8 +81,9 @@ def modify_user(username: str, modify: UserModify):
     except v2errors.EmailNotFoundError:
         pass
 
+    user = db.get_user(username)
     link, qr = share_vmess(modify.id, username)
-    return UserResponse(id=modify.id, username=username, link=link, qr=qr)
+    return UserResponse(id=user['id'], user=user['username'], plans=user['plans'], link=link, qr=qr)
 
 
 @app.delete("/user/{username}", tags=['User'])
